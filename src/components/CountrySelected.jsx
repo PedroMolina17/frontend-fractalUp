@@ -2,6 +2,8 @@ import PropTypes from "prop-types";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import defaulImage from "../../public/defaulImage.png";
 import { useEffect, useState } from "react";
+import { FaTimes } from "react-icons/fa";
+
 const CountrySelected = ({ country }) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -11,25 +13,34 @@ const CountrySelected = ({ country }) => {
     }, 100);
   }, []);
 
+  const handleClose = () => {
+    setIsVisible(false);
+  };
   return (
     <div
       className={`bottom-0 right-0 w-1/4 max-md:w-96 max-sm:w-60 min-w-64 bg-white fixed p-8 text-white transform transition-transform duration-500 ease-out ${
         isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-100"
       }`}
     >
-      <LazyLoadImage
-        src={country.capitalUrl}
-        alt={`${country.name} flag`}
-        placeholderSrc={defaulImage}
-        className="w-full h-44 rounded-md object-cover"
+      <FaTimes
+        className="text-[#676767] absolute right-4 top-4 text-xl"
+        onClick={handleClose}
       />
+      <div className="flex w-full h-48 rounded-md">
+        <LazyLoadImage
+          src={country.capitalUrl}
+          alt={`${country.name} flag`}
+          placeholderSrc={defaulImage}
+          className="w-full h-full object-cover rounded-md"
+        />
+      </div>
       <div className="flex gap-2 p-4">
         <LazyLoadImage
           src={country.flagUrl}
           alt={country.name}
           placeholderSrc={defaulImage}
           width={80}
-          className="mt-2 rounded-md"
+          className="mt-2 rounded-md "
         />
 
         <div className="flex flex-col justify-center text-white">

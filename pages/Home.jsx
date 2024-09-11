@@ -26,7 +26,7 @@ const Home = () => {
     data: searchData,
   } = useQuery(SEARCH_COUNTRIES, {
     variables: { searchTerms: searchTerm ? [searchTerm] : [] },
-    skip: !triggerSearch,
+    skip: !triggerSearch || !searchTerm,
   });
 
   const {
@@ -34,7 +34,7 @@ const Home = () => {
     error: allError,
     data: allData,
   } = useQuery(GET_ALL_COUNTRIES, {
-    skip: triggerSearch,
+    skip: triggerSearch && searchTerm,
   });
 
   const {
@@ -46,7 +46,8 @@ const Home = () => {
     skip: selectedContinents.length === 0,
   });
 
-  const countries = triggerSearch ? searchData?.countries : allData?.countries;
+  const countries =
+    triggerSearch && searchTerm ? searchData?.countries : allData?.countries;
   const continentCountries = continentData?.countries;
 
   useEffect(() => {
@@ -81,10 +82,18 @@ const Home = () => {
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
+    if (!value) {
+      // Restablecer cuando el campo de búsqueda esté vacío
+      setTriggerSearch(false);
+    }
   };
 
   const handleSearch = () => {
-    setTriggerSearch(true);
+    if (searchTerm) {
+      setTriggerSearch(true); // Solo activa la búsqueda si hay un término
+    } else {
+      setTriggerSearch(false); // Desactiva la búsqueda si no hay término
+    }
   };
 
   const handleContinentsChange = (newSelectedContinents) => {
@@ -131,24 +140,26 @@ const Home = () => {
           onSearchClick={handleSearch}
         />
 
-        <div className="grid grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1 gap-4 w-full h-96 mt-12">
+        <div className="grid grid-cols-3 max-lg:grid-cols-2 max-sm:grid-cols-1 gap-2 w-full  mt-12">
           {countriesToDisplay?.length > 0 ? (
             countriesToDisplay.map((country) => (
               <div
                 key={country.code}
-                className={`border flex flex-col rounded-3xl shadow-2xl cursor-pointer ${
+                className={`border grid col-span-1 rounded-3xl shadow-2xl cursor-pointer ${
                   selectedCountry?.code === country.code
                     ? "bg-[#009cff]"
                     : "bg-white"
                 }`}
                 onClick={() => handleCountrySelect(country)}
               >
-                <LazyLoadImage
-                  className="w-full h-48 object-cover rounded-t-3xl"
-                  placeholderSrc={defaultImage}
-                  src={capitalImages[country.code] || defaultImage}
-                  alt={country.capital || "Default image"}
-                />
+                <div className="w-full h-48 rounded-t-3xl overflow-hidden">
+                  <LazyLoadImage
+                    className="w-full h-full object-cover rounded-t-3xl overflow-hidden"
+                    placeholderSrc={defaultImage}
+                    src={capitalImages[country.code] || defaultImage}
+                    alt={country.capital || "Default image"}
+                  />
+                </div>
 
                 <div className="flex gap-2 p-4">
                   <LazyLoadImage

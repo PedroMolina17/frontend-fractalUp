@@ -10,7 +10,7 @@ function App() {
       <Router>
         <div>
           <Sidebar />
-          <div className="ml-96 md:p-12 max-md:ml-0 max-md:p-4">
+          <div className="ml-96 lg:p-6 max-md:ml-0 max-lg:p-4 max-md:mt-16 ">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/view1" element={<View1 />} />

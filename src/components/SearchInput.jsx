@@ -1,5 +1,7 @@
 import { IoMdSearch } from "react-icons/io";
 import { useState } from "react";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import defaultImage from "/public/defaulImage.png";
 
 const continentsData = [
   { code: "EU", name: "Europa", image: "/europa.png" },
@@ -75,9 +77,10 @@ const SearchInput = ({ onSearchChange, onSearchClick, onContinentsChange }) => {
                 className={`cursor-pointer rounded-md border-2`}
                 onClick={() => handleContinentClick(continent.code)}
               >
-                <img
+                <LazyLoadImage
                   src={continent.image}
                   alt={continent.name}
+                  placeholderSrc={defaultImage}
                   className={`rounded-md  ${
                     selectedContinents.includes(continent.code)
                       ? "border-blue-500 shadow-blue-500 shadow-md"

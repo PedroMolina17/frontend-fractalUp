@@ -112,16 +112,6 @@ const Home = () => {
     }
   };
 
-  if (searchLoading || allLoading || continentLoading) {
-    return (
-      <SearchInput
-        onSearchChange={handleSearchChange}
-        onSearchClick={handleSearch}
-        onContinentsChange={handleContinentsChange}
-      />
-    );
-  }
-
   if (searchError) return <p>Error: {searchError.message}</p>;
   if (allError) return <p>Error: {allError.message}</p>;
   if (continentError) return <p>Error: {continentError.message}</p>;
@@ -130,83 +120,81 @@ const Home = () => {
     selectedContinents.length > 0 ? continentCountries : countries;
 
   return (
-    <>
-      <div className="flex flex-col">
-        {selectedCountry && <CountrySelected country={selectedCountry} />}
-        <SearchInput
-          onContinentsChange={handleContinentsChange}
-          onSearchChange={handleSearchChange}
-          onSearchClick={handleSearch}
-        />
+    <div className="flex flex-col">
+      {selectedCountry && <CountrySelected country={selectedCountry} />}
+      <SearchInput
+        onContinentsChange={handleContinentsChange}
+        onSearchChange={handleSearchChange}
+        onSearchClick={handleSearch}
+      />
 
-        <div className="grid grid-cols-3 max-lg:grid-cols-2 max-sm:grid-cols-1 gap-2 w-full  mt-12">
-          {countriesToDisplay?.length > 0 ? (
-            countriesToDisplay.map((country) => (
-              <div
-                key={country.code}
-                className={`border grid col-span-1 rounded-3xl shadow-2xl cursor-pointer ${
-                  selectedCountry?.code === country.code
-                    ? "bg-[#009cff]"
-                    : "bg-white"
-                }`}
-                onClick={() => handleCountrySelect(country)}
-              >
-                <div className="w-full h-48 rounded-t-3xl overflow-hidden">
-                  <LazyLoadImage
-                    className="w-full h-full object-cover rounded-t-3xl overflow-hidden"
-                    placeholderSrc={defaultImage}
-                    src={capitalImages[country.code] || defaultImage}
-                    alt={country.capital || "Default image"}
-                  />
-                </div>
+      {(searchLoading || allLoading || continentLoading) && (
+        <div className="flex justify-center py-4">
+          <Loading />
+        </div>
+      )}
 
-                <div className="flex gap-2 p-4">
-                  <LazyLoadImage
-                    src={countryImages[country.code]}
-                    alt={country.name || "Default image"}
-                    placeholderSrc={defaultImage || defaultImage}
-                    width={80}
-                    className="mt-2 rounded-md"
-                  />
+      <div className="grid grid-cols-3 max-lg:grid-cols-2 max-sm:grid-cols-1 gap-2 w-full mt-12">
+        {countriesToDisplay?.length > 0 ? (
+          countriesToDisplay.map((country) => (
+            <div
+              key={country.code}
+              className={`border grid col-span-1 rounded-3xl shadow-2xl cursor-pointer ${
+                selectedCountry?.code === country.code
+                  ? "bg-[#009cff]"
+                  : "bg-white"
+              }`}
+              onClick={() => handleCountrySelect(country)}
+            >
+              <div className="w-full h-48 rounded-t-3xl overflow-hidden">
+                <LazyLoadImage
+                  className="w-full h-full object-cover rounded-t-3xl overflow-hidden"
+                  placeholderSrc={defaultImage}
+                  src={capitalImages[country.code] || defaultImage}
+                  alt={country.capital || "Default image"}
+                />
+              </div>
 
-                  <div className="flex flex-col justify-center">
-                    <h2
-                      className={`max-md:text-lg lg:text-xl font-bold ${
-                        selectedCountry?.code === country.code
-                          ? "text-white"
-                          : "text-[#009cff]"
-                      }`}
-                    >
-                      {country.name}
-                    </h2>
-                    <p
-                      className={`text-[#676767] max-md:text-md lg:text-lg font-bold ${
-                        selectedCountry?.code === country.code
-                          ? "text-white"
-                          : "text-[#009cff]"
-                      }`}
-                    >
-                      {country.continent.name}
-                    </p>
-                  </div>
+              <div className="flex gap-2 p-4">
+                <LazyLoadImage
+                  src={countryImages[country.code]}
+                  alt={country.name || "Default image"}
+                  placeholderSrc={defaultImage || defaultImage}
+                  width={80}
+                  className="mt-2 rounded-md"
+                />
+
+                <div className="flex flex-col justify-center">
+                  <h2
+                    className={`max-md:text-lg lg:text-xl font-bold ${
+                      selectedCountry?.code === country.code
+                        ? "text-white"
+                        : "text-[#009cff]"
+                    }`}
+                  >
+                    {country.name}
+                  </h2>
+                  <p
+                    className={`text-[#676767] max-md:text-md lg:text-lg font-bold ${
+                      selectedCountry?.code === country.code
+                        ? "text-white"
+                        : "text-[#009cff]"
+                    }`}
+                  >
+                    {country.continent.name}
+                  </p>
                 </div>
               </div>
-            ))
-          ) : (
-            <p className="text-center text-gray-500 mt-4">
-              No hay países disponibles.
-              {selectedCountry && setSelectedCountry(null)}
-            </p>
-          )}
-        </div>
-
-        {(searchLoading || allLoading || continentLoading) && (
-          <div className="flex justify-center py-4">
-            <Loading />
-          </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-center text-gray-500 mt-4">
+            No hay países disponibles.
+            {selectedCountry && setSelectedCountry(null)}
+          </p>
         )}
       </div>
-    </>
+    </div>
   );
 };
 

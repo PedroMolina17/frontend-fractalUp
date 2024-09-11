@@ -56,14 +56,17 @@ const SearchInput = ({ onSearchChange, onSearchClick, onContinentsChange }) => {
   return (
     <div className="relative flex items-center justify-center w-full">
       <label className="w-1/2 bg-white h-14 m-2 flex items-center gap-1 shadow-md rounded-3xl px-2 min-w-80">
-        <input
-          type="text"
-          className="w-full h-full px-4 bg-transparent border-none outline-none text-black"
-          placeholder="Buscar..."
-          value={countrySearch}
-          onChange={handleChangeCountry}
-          onFocus={() => setIsFocused(true)}
-        />
+        <div className="flex flex-col w-full text-[#676767]">
+          <p className="text-xl mx-4">Pais</p>
+          <input
+            type="text"
+            className="w-full h-full px-4 bg-transparent border-none outline-none text-black"
+            placeholder="Escribe el pais que deseas ver"
+            value={countrySearch}
+            onChange={handleChangeCountry}
+            onFocus={() => setIsFocused(true)}
+          />
+        </div>
         <button
           className="bg-[#009cff] flex items-center justify-center rounded-xl text-white text-xl gap-2 px-2 py-1"
           onClick={handleSearchClick}

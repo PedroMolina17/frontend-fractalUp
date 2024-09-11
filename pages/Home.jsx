@@ -83,16 +83,15 @@ const Home = () => {
   const handleSearchChange = (value) => {
     setSearchTerm(value);
     if (!value) {
-      // Restablecer cuando el campo de búsqueda esté vacío
       setTriggerSearch(false);
     }
   };
 
   const handleSearch = () => {
     if (searchTerm) {
-      setTriggerSearch(true); // Solo activa la búsqueda si hay un término
+      setTriggerSearch(true);
     } else {
-      setTriggerSearch(false); // Desactiva la búsqueda si no hay término
+      setTriggerSearch(false);
     }
   };
 

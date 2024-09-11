@@ -72,7 +72,7 @@ const CountrySelected = ({ country }) => {
           </p>
         </div>
         <p className="text-[#009cff] text-xl font-bold">Region:</p>
-        <div className="text-black h-40 overflow-scroll">
+        <div className="text-black h-2 overflow-scroll">
           {country.states.length > 0 ? (
             <ul>
               {country.states.map((state, index) => (

@@ -1,47 +1,94 @@
-import SearchInput from "../src/components/SearchInput";
-import { useQuery, gql } from "@apollo/client";
 import { useState, useEffect } from "react";
+import { useQuery } from "@apollo/client";
 import { fetchImage } from "../services/getImage";
 import CountrySelected from "../src/components/CountrySelected";
+import SearchInput from "../src/components/SearchInput";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import Loading from "../src/components/Loading";
 import defaultImage from "/public/defaulImage.png";
-
-const GET_COUNTRIES = gql`
-  query GetCountries {
-    countries {
-      code
-      name
-      currencies
-      states {
-        name
-      }
-      languages {
-        native
-      }
-      capital
-      emoji
-      continent {
-        name
-      }
-    }
-  }
-`;
+import {
+  SEARCH_COUNTRIES,
+  GET_ALL_COUNTRIES,
+  GET_COUNTRIES_BY_CONTINENT,
+} from "../queries/queries";
 
 const Home = () => {
-  const { loading, error, data } = useQuery(GET_COUNTRIES);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [triggerSearch, setTriggerSearch] = useState(false);
   const [countryImages, setCountryImages] = useState({});
   const [capitalImages, setCapitalImages] = useState({});
   const [selectedCountry, setSelectedCountry] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedContinents, setSelectedContinents] = useState([]);
+
+  const {
+    loading: searchLoading,
+    error: searchError,
+    data: searchData,
+  } = useQuery(SEARCH_COUNTRIES, {
+    variables: { searchTerms: searchTerm ? [searchTerm] : [] },
+    skip: !triggerSearch,
+  });
+
+  const {
+    loading: allLoading,
+    error: allError,
+    data: allData,
+  } = useQuery(GET_ALL_COUNTRIES, {
+    skip: triggerSearch,
+  });
+
+  const {
+    loading: continentLoading,
+    error: continentError,
+    data: continentData,
+  } = useQuery(GET_COUNTRIES_BY_CONTINENT, {
+    variables: { continents: selectedContinents },
+    skip: selectedContinents.length === 0,
+  });
+
+  const countries = triggerSearch ? searchData?.countries : allData?.countries;
+  const continentCountries = continentData?.countries;
+
+  useEffect(() => {
+    const countriesToUse =
+      selectedContinents.length > 0 ? continentCountries : countries;
+    if (countriesToUse) {
+      const fetchImages = async () => {
+        const countryPromises = countriesToUse.map(async (country) => {
+          const countryImageUrl = fetchImage(`${country.name} flag landscape`);
+          const capitalImageUrl = fetchImage(`${country.capital}`);
+          return {
+            code: country.code,
+            countryImageUrl: await countryImageUrl,
+            capitalImageUrl: await capitalImageUrl,
+          };
+        });
+
+        const results = await Promise.all(countryPromises);
+
+        const countryImageUrls = {};
+        const capitalImageUrls = {};
+        results.forEach(({ code, countryImageUrl, capitalImageUrl }) => {
+          countryImageUrls[code] = countryImageUrl;
+          capitalImageUrls[code] = capitalImageUrl;
+        });
+        setCountryImages(countryImageUrls);
+        setCapitalImages(capitalImageUrls);
+      };
+      fetchImages();
+    }
+  }, [countries, continentCountries, selectedContinents]);
 
   const handleSearchChange = (value) => {
     setSearchTerm(value);
-    console.log(value);
   };
 
   const handleSearch = () => {
-    console.log(searchTerm);
+    setTriggerSearch(true);
+  };
+
+  const handleContinentsChange = (newSelectedContinents) => {
+    setSelectedContinents(newSelectedContinents);
   };
 
   const handleCountrySelect = (country) => {
@@ -57,123 +104,99 @@ const Home = () => {
     }
   };
 
-  useEffect(() => {
-    if (data) {
-      const storedCountryImages =
-        JSON.parse(localStorage.getItem("countryImages")) || {};
-      const storedCapitalImages =
-        JSON.parse(localStorage.getItem("capitalImages")) || {};
-
-      if (
-        Object.keys(storedCountryImages).length &&
-        Object.keys(storedCapitalImages).length
-      ) {
-        setCountryImages(storedCountryImages);
-        setCapitalImages(storedCapitalImages);
-      } else {
-        const fetchImages = async () => {
-          const countryPromises = data.countries.map(async (country) => {
-            const countryImageUrl = fetchImage(
-              `${country.name} flag landscape`
-            );
-            const capitalImageUrl = fetchImage(`${country.capital}`);
-            return {
-              code: country.code,
-              countryImageUrl: await countryImageUrl,
-              capitalImageUrl: await capitalImageUrl,
-            };
-          });
-
-          const results = await Promise.all(countryPromises);
-
-          const countryImageUrls = {};
-          const capitalImageUrls = {};
-          results.forEach(({ code, countryImageUrl, capitalImageUrl }) => {
-            countryImageUrls[code] = countryImageUrl;
-            capitalImageUrls[code] = capitalImageUrl;
-          });
-
-          setCountryImages(countryImageUrls);
-          setCapitalImages(capitalImageUrls);
-
-          localStorage.setItem(
-            "countryImages",
-            JSON.stringify(countryImageUrls)
-          );
-          localStorage.setItem(
-            "capitalImages",
-            JSON.stringify(capitalImageUrls)
-          );
-        };
-
-        fetchImages();
-      }
-    }
-  }, [data]);
-
-  if (loading) return <Loading />;
-  if (error) return <p>Error: {error.message}</p>;
-
-  return (
-    <div className="flex flex-col ">
-      {selectedCountry && <CountrySelected country={selectedCountry} />}
+  if (searchLoading || allLoading || continentLoading) {
+    return (
       <SearchInput
         onSearchChange={handleSearchChange}
         onSearchClick={handleSearch}
+        onContinentsChange={handleContinentsChange}
       />
+    );
+  }
 
-      <div className="grid grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1 gap-4 w-full h-96 mt-12 ">
-        {data.countries.map((country) => (
-          <div
-            key={country.code}
-            className={`border flex flex-col rounded-3xl shadow-2xl cursor-pointer ${
-              selectedCountry?.code === country.code
-                ? "bg-[#009cff]"
-                : "bg-white"
-            }`}
-            onClick={() => handleCountrySelect(country)}
-          >
-            <LazyLoadImage
-              className="w-full h-48 object-cover rounded-t-3xl"
-              placeholderSrc={defaultImage}
-              src={capitalImages[country.code] || defaultImage}
-              alt={country.capital || "Default image"}
-            />
+  if (searchError) return <p>Error: {searchError.message}</p>;
+  if (allError) return <p>Error: {allError.message}</p>;
+  if (continentError) return <p>Error: {continentError.message}</p>;
 
-            <div className="flex gap-2 p-4">
-              <LazyLoadImage
-                src={countryImages[country.code]}
-                alt={country.name || "Default image"}
-                placeholderSrc={defaultImage || defaultImage}
-                width={80}
-                className="mt-2 rounded-md"
-              />
+  const countriesToDisplay =
+    selectedContinents.length > 0 ? continentCountries : countries;
 
-              <div className="flex flex-col justify-center">
-                <h2
-                  className={`max-md:text-lg lg:text-xl font-bold ${
-                    selectedCountry?.code === country.code
-                      ? "text-white"
-                      : "text-[#009cff]"
-                  }`}
-                >
-                  {country.name}
-                </h2>
-                <p
-                  className={`text-[#676767] max-md:text-md lg:text-lg font-bold ${
-                    selectedCountry?.code === country.code
-                      ? "text-white"
-                      : "text-[#009cff]"
-                  }`}
-                >
-                  {country.continent.name}
-                </p>
+  return (
+    <>
+      <div className="flex flex-col">
+        {selectedCountry && <CountrySelected country={selectedCountry} />}
+        <SearchInput
+          onContinentsChange={handleContinentsChange}
+          onSearchChange={handleSearchChange}
+          onSearchClick={handleSearch}
+        />
+
+        <div className="grid grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1 gap-4 w-full h-96 mt-12">
+          {countriesToDisplay?.length > 0 ? (
+            countriesToDisplay.map((country) => (
+              <div
+                key={country.code}
+                className={`border flex flex-col rounded-3xl shadow-2xl cursor-pointer ${
+                  selectedCountry?.code === country.code
+                    ? "bg-[#009cff]"
+                    : "bg-white"
+                }`}
+                onClick={() => handleCountrySelect(country)}
+              >
+                <LazyLoadImage
+                  className="w-full h-48 object-cover rounded-t-3xl"
+                  placeholderSrc={defaultImage}
+                  src={capitalImages[country.code] || defaultImage}
+                  alt={country.capital || "Default image"}
+                />
+
+                <div className="flex gap-2 p-4">
+                  <LazyLoadImage
+                    src={countryImages[country.code]}
+                    alt={country.name || "Default image"}
+                    placeholderSrc={defaultImage || defaultImage}
+                    width={80}
+                    className="mt-2 rounded-md"
+                  />
+
+                  <div className="flex flex-col justify-center">
+                    <h2
+                      className={`max-md:text-lg lg:text-xl font-bold ${
+                        selectedCountry?.code === country.code
+                          ? "text-white"
+                          : "text-[#009cff]"
+                      }`}
+                    >
+                      {country.name}
+                    </h2>
+                    <p
+                      className={`text-[#676767] max-md:text-md lg:text-lg font-bold ${
+                        selectedCountry?.code === country.code
+                          ? "text-white"
+                          : "text-[#009cff]"
+                      }`}
+                    >
+                      {country.continent.name}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
+            ))
+          ) : (
+            <p className="text-center text-gray-500 mt-4">
+              No hay países disponibles.
+              {selectedCountry && setSelectedCountry(null)}
+            </p>
+          )}
+        </div>
+
+        {(searchLoading || allLoading || continentLoading) && (
+          <div className="flex justify-center py-4">
+            <Loading />
           </div>
-        ))}
+        )}
       </div>
-    </div>
+    </>
   );
 };
 

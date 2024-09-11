@@ -4,7 +4,7 @@ export const fetchImage = async (query) => {
     const response = await axios.get(`https://pixabay.com/api/`, {
       params: {
         key: import.meta.env.VITE_PIXABAY_API_KEY,
-        q: query,
+        q: ` ${query} `,
         image_type: "photo",
       },
     });
